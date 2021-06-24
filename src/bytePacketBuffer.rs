@@ -1,36 +1,31 @@
 const PACKET_TRANSPORT_LIMIT: u8 = 512;
 
 pub struct BytePacketBuffer {
-    pub buffer:   [u8; PACKET_TRANSPORT_LIMIT],
-    pub position: usize
-};
-
+    pub buffer: [u8; PACKET_TRANSPORT_LIMIT],
+    pub position: usize,
+}
 
 impl BytePacketBuffer {
     pub fn new() -> BytePacketBuffer {
         BytePacketBuffer {
-            buffer:   [0; PACKET_TRANSPORT_LIMIT],
-            position:  0
+            buffer: [0; PACKET_TRANSPORT_LIMIT],
+            position: 0,
         }
     }
-
 
     fn position(&self) -> usize {
         self.position
     }
-
 
     fn step(&mut self, steps: usize) -> Result<()> {
         self.position = steps;
         Ok(())
     }
 
-
     fn seek(&mut self, position: usize) -> Result<()> {
         self.position = position;
         Ok(())
     }
-
 
     fn read(&mut self) -> Result<u8> {
         if self.position >= PACKET_TRANSPORT_LIMIT {
@@ -43,7 +38,6 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-
     fn get(&mut self, position: usize) -> Result<u8> {
         if position >= PACKET_TRANSPORT_LIMIT {
             return Err("End of buffer".into());
@@ -51,7 +45,6 @@ impl BytePacketBuffer {
 
         Ok(self.buffer[self.position])
     }
-
 
     fn get_range(&mut self, start: usize, length: usize) -> Result<&[u8]> {
         if start + length >= PACKET_TRANSPORT_LIMIT {
@@ -63,12 +56,10 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-
     fn read_u16(&mut self) -> Result<u16> {
         let result = ((self.read()? as u16) << 8) | (self.read()? as u16);
         Ok(result)
     }
-
 
     fn read_u32(&mut self) -> Result<u32> {
         let result = ((self.read()? as u32) << 24)
@@ -78,7 +69,6 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-
     fn read_qname(&mut self, output_str: &mut String) -> Result<()> {
         let mut position = self.position();
 
@@ -86,7 +76,6 @@ impl BytePacketBuffer {
         let mut jumps_performed = 0;
         let max_jumps = 5;
 
-        // Delimitador que será anexado em cada label.
         let mut delim = "";
 
         loop {
@@ -94,11 +83,43 @@ impl BytePacketBuffer {
                 return Err(format!("Limit of {} jumps exceeded", max_jumps).into());
             }
 
-            let length = self.get(position);
+            let length = self.get(position)?;
 
             if (length & 0xC0) == 0xC0 {
-                unimplemented!();
+                if !jumped {
+                    self.seek(position + 2)?;
+                }
+
+                let byte2 = self.get(pos + 1)? as u16;
+                let offset = (((length as u16) ^ 0xC0) << 8) | byte2;
+                position = offset as usize;
+
+                jumped = true;
+                jumps_performed += 1;
+
+                continue;
+            } else {
+                position += 1;
+
+                if length == 0 {
+                    break;
+                }
+
+                outstr.push_str(delim);
+
+                let str_buffer = self.get_range(position, length as usize)?;
+                outstr.push_str(&String::from_utf8_lossy(str_buffer).to_lowercase());
+
+                delim = ".";
+
+                position += length as usize;
             }
         }
+
+        if !jumped {
+            self.seek(position)?;
+        }
+
+        Ok(());
     }
 }
