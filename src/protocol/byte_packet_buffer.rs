@@ -3,7 +3,7 @@ use std::error::Error;
 const PACKET_TRANSPORT_LIMIT: usize = 512;
 
 pub struct BytePacketBuffer {
-    pub buffer: [u8; 512],
+    pub buffer: [u8; PACKET_TRANSPORT_LIMIT],
     pub position: usize,
 }
 
@@ -19,7 +19,7 @@ impl BytePacketBuffer {
         self.position
     }
 
-    fn step(&mut self, steps: usize) -> Result<(), Box<dyn Error>> {
+    pub fn step(&mut self, steps: usize) -> Result<(), Box<dyn Error>> {
         self.position = steps;
         Ok(())
     }
@@ -122,6 +122,6 @@ impl BytePacketBuffer {
             self.seek(position)?;
         }
 
-        Ok(());
+        Ok(())
     }
 }
