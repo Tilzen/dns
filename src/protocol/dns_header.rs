@@ -1,3 +1,7 @@
+use super::byte_packet_buffer::BytePacketBuffer;
+use super::result_code::ResultCode;
+use std::error::Error;
+
 #[derive(Clone, Debug)]
 pub struct DnsHeader {
     pub id: u16, // 16 bits
@@ -33,7 +37,7 @@ impl DnsHeader {
         }
     }
 
-    pub fn read(&mut self, buffer: &mut BytePacketBuffer) -> Result<()> {
+    pub fn read(&mut self, buffer: &mut BytePacketBuffer) -> Result<(), Box<dyn Error>> {
         self.id = buffer.read_u16()?;
 
         let flags = buffer.read_u16()?;

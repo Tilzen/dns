@@ -1,3 +1,8 @@
+use super::byte_packet_buffer::BytePacketBuffer;
+use super::query_type::QueryType;
+use std::error::Error;
+use std::net::Ipv4Addr;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[allow(dead_code)]
 pub enum DnsRecord {
@@ -15,7 +20,7 @@ pub enum DnsRecord {
 }
 
 impl DnsRecord {
-    pub fn read(buffer: &mut BytePacketBuffer) -> Result<DnsRecord> {
+    pub fn read(buffer: &mut BytePacketBuffer) -> Result<DnsRecord, Box<dyn Error>> {
         let mut domain = String::new();
         buffer.read_qname(&mut domain)?;
 

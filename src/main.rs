@@ -1,11 +1,16 @@
-use bytePacketBuffer::BytePacketBuffer;
+mod protocol;
 
-fn main() -> Result<()> {
+use crate::protocol::byte_packet_buffer::BytePacketBuffer;
+use crate::protocol::dns_packet::DnsPacket;
+use std::error::Error;
+use std::fs::File;
+
+fn main() -> Result<(), Box<dyn Error>> {
     let mut f = File::open("response_packet.txt")?;
-    let mut buffer = BytePacketBuffer::new();
-    f.read(&mut buffer.buf)?;
+    let mut packet_buffer = BytePacketBuffer::new();
+    f.read(&mut packet_buffer.buffer)?;
 
-    let packet = DnsPacket::from_buffer(&mut buffer)?;
+    let packet = DnsPacket::from_buffer(&mut packet_buffer)?;
     println!("{:#?}", packet.header);
 
     for q in packet.questions {

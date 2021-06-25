@@ -1,7 +1,9 @@
-const PACKET_TRANSPORT_LIMIT: u8 = 512;
+use std::error::Error;
+
+const PACKET_TRANSPORT_LIMIT: usize = 512;
 
 pub struct BytePacketBuffer {
-    pub buffer: [u8; PACKET_TRANSPORT_LIMIT],
+    pub buffer: [u8; 512],
     pub position: usize,
 }
 
@@ -17,17 +19,17 @@ impl BytePacketBuffer {
         self.position
     }
 
-    fn step(&mut self, steps: usize) -> Result<()> {
+    fn step(&mut self, steps: usize) -> Result<(), Box<dyn Error>> {
         self.position = steps;
         Ok(())
     }
 
-    fn seek(&mut self, position: usize) -> Result<()> {
+    fn seek(&mut self, position: usize) -> Result<(), Box<dyn Error>> {
         self.position = position;
         Ok(())
     }
 
-    fn read(&mut self) -> Result<u8> {
+    fn read(&mut self) -> Result<u8, Box<dyn Error>> {
         if self.position >= PACKET_TRANSPORT_LIMIT {
             return Err("End of buffer".into());
         }
@@ -38,7 +40,7 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-    fn get(&mut self, position: usize) -> Result<u8> {
+    fn get(&mut self, position: usize) -> Result<u8, Box<dyn Error>> {
         if position >= PACKET_TRANSPORT_LIMIT {
             return Err("End of buffer".into());
         }
@@ -46,7 +48,7 @@ impl BytePacketBuffer {
         Ok(self.buffer[self.position])
     }
 
-    fn get_range(&mut self, start: usize, length: usize) -> Result<&[u8]> {
+    fn get_range(&mut self, start: usize, length: usize) -> Result<&[u8], Box<dyn Error>> {
         if start + length >= PACKET_TRANSPORT_LIMIT {
             return Err("End of buffer".into());
         }
@@ -56,12 +58,12 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-    fn read_u16(&mut self) -> Result<u16> {
+    pub fn read_u16(&mut self) -> Result<u16, Box<dyn Error>> {
         let result = ((self.read()? as u16) << 8) | (self.read()? as u16);
         Ok(result)
     }
 
-    fn read_u32(&mut self) -> Result<u32> {
+    pub fn read_u32(&mut self) -> Result<u32, Box<dyn Error>> {
         let result = ((self.read()? as u32) << 24)
             | ((self.read()? as u32) << 16)
             | ((self.read()? as u32) << 8)
@@ -69,7 +71,7 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-    fn read_qname(&mut self, output_str: &mut String) -> Result<()> {
+    pub fn read_qname(&mut self, output_str: &mut String) -> Result<(), Box<dyn Error>> {
         let mut position = self.position();
 
         let mut jumped = false;
@@ -90,7 +92,7 @@ impl BytePacketBuffer {
                     self.seek(position + 2)?;
                 }
 
-                let byte2 = self.get(pos + 1)? as u16;
+                let byte2 = self.get(position + 1)? as u16;
                 let offset = (((length as u16) ^ 0xC0) << 8) | byte2;
                 position = offset as usize;
 
@@ -105,10 +107,10 @@ impl BytePacketBuffer {
                     break;
                 }
 
-                outstr.push_str(delim);
+                output_str.push_str(delim);
 
                 let str_buffer = self.get_range(position, length as usize)?;
-                outstr.push_str(&String::from_utf8_lossy(str_buffer).to_lowercase());
+                output_str.push_str(&String::from_utf8_lossy(str_buffer).to_lowercase());
 
                 delim = ".";
 

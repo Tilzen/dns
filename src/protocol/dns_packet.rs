@@ -1,3 +1,10 @@
+use super::byte_packet_buffer::BytePacketBuffer;
+use super::dns_header::DnsHeader;
+use super::dns_question::DnsQuestion;
+use super::dns_record::DnsRecord;
+use super::query_type::QueryType;
+use std::error::Error;
+
 #[derive(Clone, Debug)]
 pub struct DnsPacket {
     pub header: DnsHeader,
@@ -18,7 +25,7 @@ impl DnsPacket {
         }
     }
 
-    pub fn from_buffer(buffer: &mut BytePacketBuffer) -> Result<DnsPacket> {
+    pub fn from_buffer(buffer: &mut BytePacketBuffer) -> Result<DnsPacket, Box<dyn Error>> {
         let mut result = DnsPacket::new();
         result.header.read(buffer)?;
 
