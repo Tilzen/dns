@@ -20,7 +20,7 @@ impl BytePacketBuffer {
     }
 
     pub fn step(&mut self, steps: usize) -> Result<(), Box<dyn Error>> {
-        self.position = steps;
+        self.position += steps;
         Ok(())
     }
 
@@ -45,7 +45,7 @@ impl BytePacketBuffer {
             return Err("End of buffer".into());
         }
 
-        Ok(self.buffer[self.position])
+        Ok(self.buffer[position])
     }
 
     fn get_range(&mut self, start: usize, length: usize) -> Result<&[u8], Box<dyn Error>> {
