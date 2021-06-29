@@ -1,4 +1,4 @@
-use std::error::Error;
+use super::types::Result;
 
 const PACKET_TRANSPORT_LIMIT: usize = 512;
 
@@ -19,17 +19,17 @@ impl BytePacketBuffer {
         self.position
     }
 
-    pub fn step(&mut self, steps: usize) -> Result<(), Box<dyn Error>> {
+    pub fn step(&mut self, steps: usize) -> Result<()> {
         self.position += steps;
         Ok(())
     }
 
-    fn seek(&mut self, position: usize) -> Result<(), Box<dyn Error>> {
+    fn seek(&mut self, position: usize) -> Result<()> {
         self.position = position;
         Ok(())
     }
 
-    fn read(&mut self) -> Result<u8, Box<dyn Error>> {
+    fn read(&mut self) -> Result<u8> {
         if self.position >= PACKET_TRANSPORT_LIMIT {
             return Err("End of buffer".into());
         }
@@ -40,7 +40,7 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-    fn get(&mut self, position: usize) -> Result<u8, Box<dyn Error>> {
+    fn get(&mut self, position: usize) -> Result<u8> {
         if position >= PACKET_TRANSPORT_LIMIT {
             return Err("End of buffer".into());
         }
@@ -48,7 +48,7 @@ impl BytePacketBuffer {
         Ok(self.buffer[position])
     }
 
-    fn get_range(&mut self, start: usize, length: usize) -> Result<&[u8], Box<dyn Error>> {
+    fn get_range(&mut self, start: usize, length: usize) -> Result<&[u8]> {
         if start + length >= PACKET_TRANSPORT_LIMIT {
             return Err("End of buffer".into());
         }
@@ -58,12 +58,12 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-    pub fn read_u16(&mut self) -> Result<u16, Box<dyn Error>> {
+    pub fn read_u16(&mut self) -> Result<u16> {
         let result = ((self.read()? as u16) << 8) | (self.read()? as u16);
         Ok(result)
     }
 
-    pub fn read_u32(&mut self) -> Result<u32, Box<dyn Error>> {
+    pub fn read_u32(&mut self) -> Result<u32> {
         let result = ((self.read()? as u32) << 24)
             | ((self.read()? as u32) << 16)
             | ((self.read()? as u32) << 8)
@@ -71,7 +71,7 @@ impl BytePacketBuffer {
         Ok(result)
     }
 
-    pub fn read_qname(&mut self, output_str: &mut String) -> Result<(), Box<dyn Error>> {
+    pub fn read_qname(&mut self, output_str: &mut String) -> Result<()> {
         let mut position = self.position();
 
         let mut jumped = false;

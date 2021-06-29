@@ -3,7 +3,7 @@ use super::dns_header::DnsHeader;
 use super::dns_question::DnsQuestion;
 use super::dns_record::DnsRecord;
 use super::query_type::QueryType;
-use std::error::Error;
+use super::types::Result;
 
 #[derive(Clone, Debug)]
 pub struct DnsPacket {
@@ -25,7 +25,7 @@ impl DnsPacket {
         }
     }
 
-    pub fn from_buffer(buffer: &mut BytePacketBuffer) -> Result<DnsPacket, Box<dyn Error>> {
+    pub fn from_buffer(buffer: &mut BytePacketBuffer) -> Result<DnsPacket> {
         let mut result = DnsPacket::new();
         result.header.read(buffer)?;
 

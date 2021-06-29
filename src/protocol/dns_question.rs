@@ -1,6 +1,6 @@
 use super::byte_packet_buffer::BytePacketBuffer;
 use super::query_type::QueryType;
-use std::error::Error;
+use super::types::Result;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DnsQuestion {
@@ -16,7 +16,7 @@ impl DnsQuestion {
         }
     }
 
-    pub fn read(&mut self, buffer: &mut BytePacketBuffer) -> Result<(), Box<dyn Error>> {
+    pub fn read(&mut self, buffer: &mut BytePacketBuffer) -> Result<()> {
         buffer.read_qname(&mut self.name)?;
         self.qtype = QueryType::from_num(buffer.read_u16()?); // qtype
         let _ = buffer.read_u16()?; // class

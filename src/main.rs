@@ -2,11 +2,11 @@ mod protocol;
 
 use crate::protocol::byte_packet_buffer::BytePacketBuffer;
 use crate::protocol::dns_packet::DnsPacket;
-use std::error::Error;
+use crate::protocol::types::Result;
 use std::fs::File;
 use std::io::Read;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let mut file = File::open("response_packet.txt")?;
     let mut packet_buffer = BytePacketBuffer::new();
 
