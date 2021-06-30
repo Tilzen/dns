@@ -8,8 +8,8 @@ use crate::protocol::types::Result;
 use std::net::UdpSocket;
 
 fn main() -> Result<()> {
-    let query_name = "google.com";
-    let query_type = QueryType::A;
+    let query_name = "yahoo.com";
+    let query_type = QueryType::MX;
 
     let server = ("8.8.8.8", 53);
 

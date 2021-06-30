@@ -170,4 +170,15 @@ impl BytePacketBuffer {
         self.write_u8(0)?;
         Ok(())
     }
+
+    pub fn set(&mut self, position: usize, value: u8) -> Result<()> {
+        self.buffer[position] = value;
+        Ok(())
+    }
+
+    pub fn set_u16(&mut self, position: usize, value: u16) -> Result<()> {
+        self.set(position, (value >> 8) as u8)?;
+        self.set(position + 1, (value & 0xFF) as u8)?;
+        Ok(())
+    }
 }
