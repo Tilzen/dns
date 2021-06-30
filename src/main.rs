@@ -2,29 +2,52 @@ mod protocol;
 
 use crate::protocol::byte_packet_buffer::BytePacketBuffer;
 use crate::protocol::dns_packet::DnsPacket;
+use crate::protocol::dns_question::DnsQuestion;
+use crate::protocol::query_type::QueryType;
 use crate::protocol::types::Result;
-use std::fs::File;
-use std::io::Read;
+use std::net::UdpSocket;
 
 fn main() -> Result<()> {
-    let mut file = File::open("response_packet.txt")?;
-    let mut packet_buffer = BytePacketBuffer::new();
+    let query_name = "google.com";
+    let query_type = QueryType::A;
 
-    file.read(&mut packet_buffer.buffer)?;
+    let server = ("8.8.8.8", 53);
 
-    let packet = DnsPacket::from_buffer(&mut packet_buffer)?;
-    println!("{:#?}", packet.header);
+    let socket = UdpSocket::bind(("0.0.0.0", 43210))?;
 
-    for q in packet.questions {
-        println!("{:#?}", q);
+    let mut packet = DnsPacket::new();
+
+    packet.header.id = 6666;
+    packet.header.questions = 1;
+    packet.header.recursion_desired = true;
+    packet
+        .questions
+        .push(DnsQuestion::new(query_name.to_string(), query_type));
+
+    let mut request_buffer = BytePacketBuffer::new();
+    packet.write(&mut request_buffer)?;
+
+    socket.send_to(&request_buffer.buffer[0..request_buffer.position], server)?;
+
+    let mut response_buffer = BytePacketBuffer::new();
+    socket.recv_from(&mut response_buffer.buffer)?;
+
+    let response_packet = DnsPacket::from_buffer(&mut response_buffer)?;
+    println!("{:#?}", response_packet.header);
+
+    for question in response_packet.questions {
+        println!("{:#?}", question);
     }
-    for rec in packet.answers {
+
+    for rec in response_packet.answers {
         println!("{:#?}", rec);
     }
-    for rec in packet.authorities {
+
+    for rec in response_packet.authorities {
         println!("{:#?}", rec);
     }
-    for rec in packet.resources {
+
+    for rec in response_packet.resources {
         println!("{:#?}", rec);
     }
 

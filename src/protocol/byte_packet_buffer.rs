@@ -15,7 +15,7 @@ impl BytePacketBuffer {
         }
     }
 
-    fn position(&self) -> usize {
+    pub fn position(&self) -> usize {
         self.position
     }
 
@@ -122,6 +122,52 @@ impl BytePacketBuffer {
             self.seek(position)?;
         }
 
+        Ok(())
+    }
+
+    fn write(&mut self, value: u8) -> Result<()> {
+        if self.position >= PACKET_TRANSPORT_LIMIT {
+            return Err("End of buffer".into());
+        }
+
+        self.buffer[self.position] = value;
+        self.position += 1;
+        Ok(())
+    }
+
+    pub fn write_u8(&mut self, value: u8) -> Result<()> {
+        self.write(value)?;
+        Ok(())
+    }
+
+    pub fn write_u16(&mut self, value: u16) -> Result<()> {
+        self.write((value >> 8) as u8)?;
+        self.write((value & 0xFF) as u8)?;
+        Ok(())
+    }
+
+    pub fn write_u32(&mut self, value: u32) -> Result<()> {
+        self.write(((value >> 24) & 0xFF) as u8)?;
+        self.write(((value >> 16) & 0xFF) as u8)?;
+        self.write(((value >> 8) & 0xFF) as u8)?;
+        self.write(((value >> 0) & 0xFF) as u8)?;
+        Ok(())
+    }
+
+    pub fn write_qname(&mut self, qname: &str) -> Result<()> {
+        for label in qname.split('.') {
+            let len = label.len();
+            if len > 0x3f {
+                return Err("Single label exceeds 63 characters of length".into());
+            }
+
+            self.write_u8(len as u8)?;
+            for b in label.as_bytes() {
+                self.write_u8(*b)?;
+            }
+        }
+
+        self.write_u8(0)?;
         Ok(())
     }
 }
