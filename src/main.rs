@@ -1,10 +1,10 @@
-mod protocol;
+mod dns;
 
-use crate::protocol::byte_packet_buffer::BytePacketBuffer;
-use crate::protocol::dns_packet::DnsPacket;
-use crate::protocol::dns_question::DnsQuestion;
-use crate::protocol::query_type::QueryType;
-use crate::protocol::types::Result;
+use crate::dns::byte_packet_buffer::BytePacketBuffer;
+use crate::dns::dns_packet::DnsPacket;
+use crate::dns::dns_question::DnsQuestion;
+use crate::dns::query_type::QueryType;
+use crate::dns::types::Result;
 use std::net::UdpSocket;
 
 fn main() -> Result<()> {
